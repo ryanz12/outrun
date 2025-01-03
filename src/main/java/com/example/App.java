@@ -1,7 +1,10 @@
 package com.example;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.example.Player.PLAYER_DIRECTIONS;
@@ -115,15 +118,17 @@ public class App extends Application {
     public ArrayList <Line> lines = new ArrayList<>();
     public int N;
     public int pos = 0;
-    public int speed = 400;
+    public int speed = 0;
+    public int turn_speed = 200;
     public int player_x = 0;
 
     public Set<KeyCode> active_keys = new HashSet<>();
     public Player player;
 
-    public double bg_offset_x = 0;
+    public double bg_offset = 0;
     public Image background = new Image("backgrounds/night_sky.png");
-    public Image tree = new Image("objects/tree.png");
+
+    public Map <String, Image> game_objects;
 
     // ---------- 2D TO 3D PROJECTION (QUADRILATERAL) ----------
     public void draw_quad(GraphicsContext gc, Color color, int x1, int y1, int w1, int x2, int y2, int w2){
@@ -142,6 +147,12 @@ public class App extends Application {
     // ---------- INITIALIZE GAME ----------
     @Override
     public void start(Stage main_stage) {
+        game_objects = new HashMap<>() {{
+            put("tree", new Image("objects/tree.png"));
+            put("palm_tree", new Image("objects/palm_tree.png"));
+            put("bush", new Image("objects/bush.png"));
+            put("finish", new Image("objects/finish_line.png"));
+        }};
 
         // initalize javafx containers/wrappers/canvas
         Canvas canvas = new Canvas(WIDTH, HEIGHT);
@@ -168,16 +179,26 @@ public class App extends Application {
             line.z = i * SEG_LENGTH;
 
             // curve
-            if (i > 300 && i < 700) line.curve = 1.5f;
+            if (i > 300 && i < 700) line.curve = .5f;
 
             // hill
-            if (i > 750 && i < 1000) line.y = (float)(Math.sin(i / 30.0) * 3000);
+            if (i > 750 && i < 1000) line.y = (float)(Math.sin(i / 30.0) * 1500);
 
-            if (i > 1000) line.curve = 2.5f;
+            if (i > 1000) line.curve = -2.5f;
 
-            if (i % 20 == 0){
+            if (i % 20 == 0) {
                 line.sprite_x = -2.5f;
-                line.sprite = tree;
+                line.sprite = game_objects.get("tree");
+            }
+
+            if (i > 300 && i % 19 == 0){
+                line.sprite_x = 2.5f;
+                line.sprite = game_objects.get("palm_tree");
+            }
+
+            if (i==1200){
+                line.sprite_x = -.5f;
+                line.sprite = game_objects.get("finish");
             }
 
             lines.add(line);
@@ -201,7 +222,7 @@ public class App extends Application {
     // ---------- RENDERING ROAD ----------
     public void render_road(GraphicsContext gc){
         int start_pos = pos/SEG_LENGTH;
-        float cam_height = 4000 + lines.get(start_pos).y;
+        float cam_height = 1500 + lines.get(start_pos).y;
         float x = 0, dx = 0;
         float max_y = HEIGHT;
 
@@ -211,6 +232,7 @@ public class App extends Application {
 
             x += dx;
             dx += cur_line.curve;
+            cur_line.clip = max_y;
 
             if (cur_line.Y >= max_y) continue;
             max_y = cur_line.Y;
@@ -218,12 +240,15 @@ public class App extends Application {
             Color grass = (n/3)%2==1?Color.rgb(16,200,16):Color.rgb(0,154,0);
             Color rumble = (n/3)%2==1?Color.rgb(255,255,255):Color.rgb(0,0,0);
             Color road = (n/3)%2==1?Color.rgb(107,107,107):Color.rgb(105,105,105);
+            Color road_lines = (n/3)%2==1?Color.rgb(255, 255, 255):Color.rgb(106, 106, 106);
 
             Line prev_line = lines.get((n-1+N)%N);
 
             draw_quad(gc, grass, 0, (int)prev_line.Y, WIDTH, 0, (int)cur_line.Y, WIDTH);
-            draw_quad(gc, rumble, (int)prev_line.X, (int)prev_line.Y, (int)(prev_line.W*1.2), (int)cur_line.X, (int)cur_line.Y, (int)(cur_line.W*1.2));
+            draw_quad(gc, rumble, (int)prev_line.X, (int)prev_line.Y, (int)(prev_line.W*SEG_WIDTH_M), (int)cur_line.X, (int)cur_line.Y, (int)(cur_line.W*SEG_WIDTH_M));
             draw_quad(gc, road, (int)prev_line.X, (int)prev_line.Y, (int)prev_line.W, (int)cur_line.X, (int)cur_line.Y, (int)cur_line.W);
+            draw_quad(gc, road_lines, (int)prev_line.X, (int)prev_line.Y, (int)prev_line.W/3, (int)cur_line.X, (int)cur_line.Y, (int)cur_line.W/3);
+            draw_quad(gc, road, (int)prev_line.X, (int)prev_line.Y, (int)(prev_line.W/3.4), (int)cur_line.X, (int)cur_line.Y, (int)(cur_line.W/3.4));
         }
 
         for (int n=start_pos + 500; n>start_pos; n--){
@@ -231,53 +256,76 @@ public class App extends Application {
         }
     }
 
-    // ---------- RENDERING GAME COMPONENTS ----------
-    public void render(GraphicsContext gc){
-        // clear screen
+    // ---------- rendering game components ----------
+    public void render(GraphicsContext gc) {
+        // Clear screen
         gc.clearRect(0, 0, WIDTH, HEIGHT);
 
-        // Draw background
-        // gc.setFill(Color.LIGHTBLUE);
-        // gc.fillRect(0, 0, WIDTH, HEIGHT);
+        // Adjust the background offset to ensure it loops infinitely
+        double adjustedBgOffset = bg_offset % background.getWidth();
+        if (adjustedBgOffset < 0) {
+            adjustedBgOffset += background.getWidth(); // Fix for negative offsets
+        }
+
+        // Draw the first background
+        gc.drawImage(
+            background,
+            0, 0, 800, 300,
+            -adjustedBgOffset, 0, WIDTH, HEIGHT / 1.75
+        );
+
+        // Draw the second background if the first one has gone off-screen
+        if (adjustedBgOffset > 0) {
+            gc.drawImage(
+                background,
+                0, 0, 800, 300,
+                background.getWidth() - adjustedBgOffset, 0, WIDTH, HEIGHT / 1.75
+            );
+        }
 
         render_road(gc);
-
-        player.render(WIDTH/2, HEIGHT-200);
+        player.render(WIDTH / 2, HEIGHT - 200);
     }
 
-    // ---------- UPDATING GAME LOGIC ----------
-    public void update(){
+    public void update() {
         int seg_index = pos / SEG_LENGTH;
         boolean uphill = is_uphill(seg_index);
         boolean downhill = is_downhill(seg_index);
 
-        if (active_keys.contains(KeyCode.W)){
-            pos += speed;
-
+        if (active_keys.contains(KeyCode.W)) {
+            speed = 400;
             if (uphill) player.set_direction(PLAYER_DIRECTIONS.UPHILL_STRAIGHT);
             else if (downhill) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_STRAIGHT);
             else player.set_direction(PLAYER_DIRECTIONS.STRAIGHT);
         }
 
-        if (active_keys.contains(KeyCode.A)){
-            player_x -= speed;
-
+        if (active_keys.contains(KeyCode.A)) {
+            player_x -= turn_speed;
             if (uphill) player.set_direction(PLAYER_DIRECTIONS.UPHILL_LEFT);
             else if (downhill) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_LEFT);
             else player.set_direction(PLAYER_DIRECTIONS.LEFT);
         }
-        if (active_keys.contains(KeyCode.D)){
-            player_x += speed;
-
+        if (active_keys.contains(KeyCode.D)) {
+            player_x += turn_speed;
             if (uphill) player.set_direction(PLAYER_DIRECTIONS.UPHILL_RIGHT);
             else if (downhill) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_RIGHT);
             else player.set_direction(PLAYER_DIRECTIONS.RIGHT);
         }
 
         //debuggin
-        if (active_keys.contains(KeyCode.S)){
-            pos -= speed;
+        if (active_keys.contains(KeyCode.S)) {
+            speed = -400;
         }
+
+        pos += speed;
+        if (speed > 0) {
+            bg_offset += lines.get(seg_index).curve * SCROLL_SPEED;
+        }
+        if (speed < 0) {
+            bg_offset -= lines.get(seg_index).curve * SCROLL_SPEED;
+        }
+
+        speed = 0;  
     }
 
     private boolean is_uphill(int seg_index){
