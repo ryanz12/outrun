@@ -3,11 +3,11 @@ package com.example;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.example.Player.PLAYER_DIRECTIONS;
+import static com.example.Constants.*;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -20,106 +20,41 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import static com.example.Constants.*;
+
+/**
+ * @author: Ryan Zhou
+ * @date: Fri Jan  3 19:41:02 2025
+ * @description:
+ */
 
 /**
  * @resources
  * https://www.youtube.com/watch?v=N60lBZDEwJ8
  * http://www.extentofthejam.com/pseudo/#intro
  * https://www.youtube.com/watch?v=FVo1fm52hz0
+ * https://github.com/buntine/SwervinMervin/tree/master/lib
  */
 
 
-// TODO:
+/* TODO
+ * - collision detecion
+ * - audio
+ * - ai
+ * - more maps
+ * - menu
+ * - game ui
+ * - multiple roads (branching)??
+ * */
 
-/**
- * @core
- * <Implement Opponent AI>
- *   - Create bot class similar to player
- *   - basic ai features (e.g staying on track, accel, decel)
- *   - path following
- *   - difficulty
- *  <Collision Detection>
- *   - detection with ai/obstacles
- *   - penalize player (reduce speed, reset)
- *  <Track>
- *   - multiple tracks
- *   - track selection menu
- *   - checkpoints
- *  <Nitro>
- *   - make temp speed boosts
- *   - nitro meter
- *   - visuals
- *   - track element
- *  <Dynamic Obstacles>
- *   - coins/coin System
- *  <Steering>
- *   - centrifugal force
- *   - make car actually turn
- *   - slow down
- *   - uphill, downhill, left, right
- */
-
-/**
- * @visuals
- * <Graphics>
- *   - background elements (e.g background, buildings, trees, etc)
- *   - road lines
- *   - particle effects
- * <Camera>
- *   - dynamic camera
- *   - shake effects
- * <Sound effects and Music>
- *   - sound effects for steering, nitro, revs, etc
- *   - background music (user can choose)
- *   - announcer sounds?
- */
-
-/**
- * @ui
- * <Menu>
- *   - options: play, settings, manual, exit
- *   - css
- * <HUD>
- *   - speedometer
- *   - minimap
- *   - time elapsed
- *   - lap info
- * <Pause Menu>
- *   - allow pausing
- *   - options: resume, restart, settings, exit
- * <Post Race Menu>
- *   - leaderboard, score, rewards
- *   - exit
- */
-
-/**
- * @gameplay
- * <Racing Modes>
- *   - tourneys
- * <Player Progression>
- *   - currency system
- *   - car upgrades
- *   - new cars
- */
-
-/**
- * @extra
- * <Customization>
- *   - paint car, wheels
- * <Weather>
- *   - dynamic weather and time of day
- * <Achivements>
- *   - hall of fame, achivements
- */
 
 public class App extends Application {
     // ---------- INITALIZE VARIAVLES ----------
     public ArrayList <Line> lines = new ArrayList<>();
-    public int N;
-    public int pos = 0;
-    public int speed = 0;
-    public int turn_speed = 200;
+    public int N = 16000;
+    public double pos = 0;
+    public double vel = 0;
+    public double d_vel = 0;
+    public int turn_vel = 200;
     public int player_x = 0;
 
     public Set<KeyCode> active_keys = new HashSet<>();
@@ -131,6 +66,22 @@ public class App extends Application {
     public Map <String, Image> game_objects;
 
     // ---------- 2D TO 3D PROJECTION (QUADRILATERAL) ----------
+    //
+    //                             w1
+    //                ----------------------------
+    //               /              *             \
+    //              /            (x2,y2)           \
+    //             /                                \
+    //            /                                  \
+    //           /                                    \
+    //          /                                      \
+    //         /                                        \
+    //        /                                          \
+    //       /                   (x1,y1)                  \
+    //      /                       *                      \
+    //     --------------------------------------------------
+    //                             w2
+    //
     public void draw_quad(GraphicsContext gc, Color color, int x1, int y1, int w1, int x2, int y2, int w2){
         gc.beginPath();
         gc.setFill(color);
@@ -169,12 +120,12 @@ public class App extends Application {
 
         main_stage.setScene(scene);
         main_stage.setResizable(false);
-        main_stage.setTitle("Forza Horizon 7");
+        main_stage.setTitle("Concrete 10");
         main_stage.show();
 
         player = new Player(gc);
 
-        for (int i=0; i<1600; i++){
+        for (int i=0; i<N; i++){
             Line line = new Line();
             line.z = i * SEG_LENGTH;
 
@@ -184,8 +135,9 @@ public class App extends Application {
             // hill
             if (i > 750 && i < 1000) line.y = (float)(Math.sin(i / 30.0) * 1500);
 
-            if (i > 1000) line.curve = -2.5f;
+            if (i > 1000 && i < 1600) line.curve = -2.5f;
 
+            // obects
             if (i % 20 == 0) {
                 line.sprite_x = -2.5f;
                 line.sprite = game_objects.get("tree");
@@ -204,8 +156,6 @@ public class App extends Application {
             lines.add(line);
         }
 
-        N = lines.size();
-
         // main game loop
         AnimationTimer timer = new AnimationTimer() {
                 @Override
@@ -221,14 +171,14 @@ public class App extends Application {
 
     // ---------- RENDERING ROAD ----------
     public void render_road(GraphicsContext gc){
-        int start_pos = pos/SEG_LENGTH;
+        int start_pos = (int)(pos/SEG_LENGTH);
         float cam_height = 1500 + lines.get(start_pos).y;
         float x = 0, dx = 0;
         float max_y = HEIGHT;
 
         for (int n=start_pos; n<start_pos+500; n++){
             Line cur_line = lines.get(n % N);
-            cur_line.project(player_x - x, cam_height, pos);
+            cur_line.project(player_x - x, cam_height, (int)pos);
 
             x += dx;
             dx += cur_line.curve;
@@ -251,6 +201,7 @@ public class App extends Application {
             draw_quad(gc, road, (int)prev_line.X, (int)prev_line.Y, (int)(prev_line.W/3.4), (int)cur_line.X, (int)cur_line.Y, (int)(cur_line.W/3.4));
         }
 
+
         for (int n=start_pos + 500; n>start_pos; n--){
             lines.get(n%N).draw_sprite(gc);
         }
@@ -261,25 +212,24 @@ public class App extends Application {
         // Clear screen
         gc.clearRect(0, 0, WIDTH, HEIGHT);
 
-        // Adjust the background offset to ensure it loops infinitely
-        double adjustedBgOffset = bg_offset % background.getWidth();
-        if (adjustedBgOffset < 0) {
-            adjustedBgOffset += background.getWidth(); // Fix for negative offsets
+        double adjusted_bg_offset = bg_offset % background.getWidth();
+        if (adjusted_bg_offset < 0) {
+            adjusted_bg_offset += background.getWidth(); // Fix for negative offsets
         }
 
         // Draw the first background
         gc.drawImage(
             background,
             0, 0, 800, 300,
-            -adjustedBgOffset, 0, WIDTH, HEIGHT / 1.75
+            -adjusted_bg_offset, 0, WIDTH, HEIGHT / 1.75
         );
 
         // Draw the second background if the first one has gone off-screen
-        if (adjustedBgOffset > 0) {
+        if (adjusted_bg_offset > 0) {
             gc.drawImage(
                 background,
                 0, 0, 800, 300,
-                background.getWidth() - adjustedBgOffset, 0, WIDTH, HEIGHT / 1.75
+                background.getWidth() - adjusted_bg_offset, 0, WIDTH, HEIGHT / 1.75
             );
         }
 
@@ -288,44 +238,101 @@ public class App extends Application {
     }
 
     public void update() {
-        int seg_index = pos / SEG_LENGTH;
+        int seg_index = (int)(pos/SEG_LENGTH);
         boolean uphill = is_uphill(seg_index);
         boolean downhill = is_downhill(seg_index);
+        boolean offroad = player_x <= -ROAD_WIDTH || player_x + player.get_width() >= ROAD_WIDTH;
 
         if (active_keys.contains(KeyCode.W)) {
-            speed = 400;
+
+            d_vel += 9.15;
+
+            // cap acceleration limit
+            if (d_vel > MAX_ACCEL) d_vel = MAX_ACCEL;
+            vel += d_vel;
+
+            // cap speed limit
+            if (vel > MAX_VEL) vel = MAX_VEL;
+
+            // centrifrugal force
+            Line c_line = lines.get(seg_index % N);
+            if (c_line.curve != 0){
+                player_x -= c_line.curve*CENTRIFRUGAL_FORCE_M;
+            }
+
             if (uphill) player.set_direction(PLAYER_DIRECTIONS.UPHILL_STRAIGHT);
             else if (downhill) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_STRAIGHT);
             else player.set_direction(PLAYER_DIRECTIONS.STRAIGHT);
         }
+        else {
+            // decel naturally
+            d_vel -= 0.15;
+            if (d_vel < 0 ) d_vel = 0;
+
+            vel -= d_vel;
+            if (vel < 0) vel = 0;
+        }
+        // outside road
+        if (offroad){
+            vel *= 0.97;
+            if (vel < 50) vel = 50;
+        }
+
+        System.out.println("vel: " + vel + " d_vel: " + d_vel);
 
         if (active_keys.contains(KeyCode.A)) {
-            player_x -= turn_speed;
-            if (uphill) player.set_direction(PLAYER_DIRECTIONS.UPHILL_LEFT);
-            else if (downhill) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_LEFT);
-            else player.set_direction(PLAYER_DIRECTIONS.LEFT);
+            player_x -= vel * 0.2;
+            handle_turning_dur(uphill, downhill, "l");
         }
         if (active_keys.contains(KeyCode.D)) {
-            player_x += turn_speed;
-            if (uphill) player.set_direction(PLAYER_DIRECTIONS.UPHILL_RIGHT);
-            else if (downhill) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_RIGHT);
-            else player.set_direction(PLAYER_DIRECTIONS.RIGHT);
+            player_x += vel * 0.2;
+            handle_turning_dur(uphill, downhill, "");
         }
 
         //debuggin
         if (active_keys.contains(KeyCode.S)) {
-            speed = -400;
+            vel = -400;
         }
 
-        pos += speed;
-        if (speed > 0) {
+        pos += vel;
+        if (vel > 0) {
             bg_offset += lines.get(seg_index).curve * SCROLL_SPEED;
         }
-        if (speed < 0) {
+        if (vel < 0) {
             bg_offset -= lines.get(seg_index).curve * SCROLL_SPEED;
         }
+    }
 
-        speed = 0;  
+    private void handle_turning_dur(boolean up, boolean down, String dir){
+        // use smoke animation when vel over 300
+        if (vel > 300){
+            // turning left
+            if (dir.equals("l")){
+                if (up) player.set_direction(PLAYER_DIRECTIONS.UH_LEFT_SMOKE);
+                else if (down) player.set_direction(PLAYER_DIRECTIONS.DH_LEFT_SMOKE);
+                else player.set_direction(PLAYER_DIRECTIONS.LEFT_SMOKE);
+            }
+            // turning right
+            else {
+                if (up) player.set_direction(PLAYER_DIRECTIONS.UH_RIGHT_SMOKE);
+                else if (down) player.set_direction(PLAYER_DIRECTIONS.DH_RIGHT_SMOKE);
+                else player.set_direction(PLAYER_DIRECTIONS.RIGHT_SMOKE);
+            }
+        }
+        // normal turn animations
+        else {
+            if (dir.equals("l")){
+                if (up) player.set_direction(PLAYER_DIRECTIONS.UPHILL_LEFT);
+                else if (down) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_LEFT);
+                else player.set_direction(PLAYER_DIRECTIONS.LEFT);
+            }
+            // turning right
+            else {
+                if (up) player.set_direction(PLAYER_DIRECTIONS.UPHILL_RIGHT);
+                else if (down) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_RIGHT);
+                else player.set_direction(PLAYER_DIRECTIONS.RIGHT);
+            }
+        }
     }
 
     private boolean is_uphill(int seg_index){

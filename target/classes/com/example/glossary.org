@@ -1,0 +1,39 @@
+#+title: Glossary
+#+author: Ryan Zhou
+#+date: Mon Jan  6 20:34:44 2025
+
+
+* App
+** lines: An arraylist representing segments of the road
+** N: The number of "segments" in lines
+** pos: position of the player
+** player_x: position of the player on the x-axis (sideways)
+** cam_height: always X amount above the segment height
+** x (render_road): horizontal position of the current segment
+** dx: change in horizontal offset
+
+
+
+* Code notes
+** Line cur_line = lines.get(n % N);
+*** Use n % N to ensure array stays within bounds
+
+** cur_line.project(player_x - x, cam_height, pos);
+*** projects current line, uses player_x - x to account for curavture
+
+** double adjusted_bg_offset = bg_offset % background.getWidth();
+*** similar idea, use modulus to "wrap around"
+
+** int seg_index = pos / SEG_LENGTH;
+*** get the current position, accounts for the segment length
+
+
+* Implementation
+** Movement
+*** Start at no accel, speeds up gradually
+*** Turning doesn't move player as much at a lower speed
+*** Going on the rumble/grass slowly stops car
+*** Grass will slow car faster than rumble will
+*** pos += velocity
+*** velocity recalculated every move
+*** velocity

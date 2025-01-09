@@ -8,4 +8,7 @@ public class Constants {
     public final static double SEG_WIDTH_M = 1.3;
     public final static float CAM_DEPTH = (float).94;
     public final static double SCROLL_SPEED = 4;
+    public final static double CENTRIFRUGAL_FORCE_M = 15;
+    public final static double MAX_VEL = 400;
+    public final static double MAX_ACCEL = 11;
 }

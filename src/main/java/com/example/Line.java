@@ -15,7 +15,7 @@ public class Line {
     }
 
     public void project(float cam_x, float cam_y, float cam_z){
-        scale = CAM_DEPTH / (z-cam_z);
+        scale = CAM_DEPTH / Math.max(0.1f, z - cam_z); //avoid dividing by 0
         X = (1 + scale * (x - cam_x)) * WIDTH / 2;
         Y = (1 - scale * (y - cam_y)) * HEIGHT / 2;
         W = scale * ROAD_WIDTH * WIDTH / 2;
@@ -35,10 +35,10 @@ public class Line {
         dest_X += dest_W * sprite_x;
         dest_Y += dest_H * (-1);
 
-        System.out.println("dest_x: " + dest_X + ", dest_y: " + dest_Y);
+        // System.out.println("dest_x: " + dest_X + ", dest_y: " + dest_Y);
 
         double clip_H = dest_Y + dest_H - clip;
-        System.out.println("Clip: " + clip + " Clip_H: " + clip_H + " Dest_H: " + dest_H);
+        // System.out.println("Clip: " + clip + " Clip_H: " + clip_H + " Dest_H: " + dest_H);
 
         if (clip_H < 0) clip_H = 0;
         if (clip_H >= dest_H) return;
@@ -50,9 +50,3 @@ public class Line {
         );
     }
 }
-
-        // gc.drawImage(
-        //     background,
-        //     0+bg_offset, 0, 600+bg_offset, 300,
-        //     0, 0, WIDTH, HEIGHT/1.75
-        // );
