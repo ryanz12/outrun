@@ -1,0 +1,15 @@
+
+@font-face {
+    font-family: "Press Start 2P";
+    src: url("../fonts/main_font.ttf");
+}
+
+.label {
+    -fx-font-family: "Press Start 2P";
+    -fx-font-size: 16px;
+}
+
+
+.cdLabel {
+    -fx-font-size: 64px;
+}
