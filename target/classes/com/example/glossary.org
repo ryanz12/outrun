@@ -37,3 +37,4 @@
 *** pos += velocity
 *** velocity recalculated every move
 *** velocity
+*** The player actually "moves" by changing the background and not the car

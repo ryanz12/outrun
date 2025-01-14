@@ -2,13 +2,19 @@ package com.example.controllers;
 
 import java.util.HashMap;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.stage.Stage;
 
 public class MusicController {
 
@@ -56,6 +62,11 @@ public class MusicController {
 
         media = new Media(songs.get(song_index)[2]);
         media_player = new MediaPlayer(media);
+
+        media_player.setOnEndOfMedia(() -> {
+            song_index = (song_index + 1) % max_song;
+            new_song(song_index);
+        });
     }
 
     public void plause(){
@@ -85,6 +96,11 @@ public class MusicController {
         title_label.setText(songs.get(song_index)[0]);
         author_label.setText(songs.get(song_index)[1]);
         cover.setImage(new Image(songs.get(song_index)[3]));
+
+        media_player.setOnEndOfMedia(() -> {
+            song_index = (song_index + 1) % max_song;
+            new_song(song_index);
+        });
     }
 
     public void previous(){
@@ -107,5 +123,16 @@ public class MusicController {
         }
 
         new_song(song_index);
+    }
+
+
+    public void back(ActionEvent e) throws Exception {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/menu.fxml"));
+        Parent new_root = loader.load();
+
+        Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+        Scene cur_scene = stage.getScene();
+
+        cur_scene.setRoot(new_root);
     }
 }

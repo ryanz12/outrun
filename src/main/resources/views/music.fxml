@@ -56,5 +56,10 @@
             </ImageView>
          </children>
       </AnchorPane>
+      <Button alignment="CENTER" layoutX="43.0" layoutY="63.0" mnemonicParsing="false" onAction="#back" prefHeight="43.0" prefWidth="129.0" text="&lt;">
+         <cursor>
+            <Cursor fx:constant="HAND" />
+         </cursor>
+      </Button>
    </children>
 </AnchorPane>

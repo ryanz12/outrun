@@ -296,7 +296,6 @@ public class GameController{
 
             vel -= d_vel;
             if (vel < 0) vel = 0;
-
         }
 
 
