@@ -42,6 +42,7 @@ public class GameController{
 
     public boolean game_started = false;
     public int countdown = 3;
+    public long start_time, seconds_elapsed;
 
     @FXML
     public Canvas canvas;
@@ -50,7 +51,7 @@ public class GameController{
     public AnchorPane anchor_pane;
 
     @FXML
-    public Label speed_label, cd_label;
+    public Label speed_label, cd_label, time_label;
 
     // ---------- 2D TO 3D PROJECTION (QUADRILATERAL) ----------
     //
@@ -101,12 +102,27 @@ public class GameController{
                 else {
                     game_started = true;
                     cd_label.setVisible(false);
+                    start_time = System.currentTimeMillis();
                 }
             })
         );
-        cd_timer.setCycleCount(Timeline.INDEFINITE);
+        cd_timer.setCycleCount(countdown + 1);
         cd_timer.play();
     }
+
+    // public void elapsed_timer(){
+    //     start_time = System.currentTimeMillis();
+
+    //     new AnimationTimer(){
+    //         @Override
+    //         public void handle(long now){
+    //             long elapsed_millis = System.currentTimeMillis() - start_time;
+    //             seconds_elapsed = (elapsed_millis / 1000) % 60;
+    //             time_label.setText("Time: " + seconds_elapsed);
+    //             System.out.println(seconds_elapsed);
+    //         }
+    //     }.start();
+    // }
 
     // ---------- INITIALIZE GAME ----------
     @FXML
@@ -167,11 +183,11 @@ public class GameController{
 
         // main game loop
         AnimationTimer timer = new AnimationTimer() {
-                @Override
-                public void handle(long now){
-                    update();
-                    render(gc);
-                }
+            @Override
+            public void handle(long now){
+                update();
+                render(gc);
+            }
         };
 
         timer.start();
@@ -216,6 +232,7 @@ public class GameController{
         for (int n=start_pos + 500; n>start_pos; n--){
             lines.get(n%N).draw_sprite(gc);
         }
+
     }
 
     // ---------- rendering game components ----------
@@ -246,11 +263,17 @@ public class GameController{
 
         render_road(gc);
         player.render(WIDTH / 2, HEIGHT - 200);
+
     }
 
     public void update() {
         // skip game logic if game not started
         if (!game_started) return;
+
+        // Calc time passed
+        long elapsed_millis = System.currentTimeMillis() - start_time;
+        seconds_elapsed = (elapsed_millis / 1000) % 60;
+        time_label.setText("Time: " + seconds_elapsed);
 
         int seg_index = (int)(pos/SEG_LENGTH);
         boolean uphill = is_uphill(seg_index);
