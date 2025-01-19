@@ -66,6 +66,16 @@ public class MenuController {
         newRoot.requestFocus();
     }
 
+    public void map(ActionEvent e) throws Exception {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/map.fxml"));
+        Parent new_root = loader.load();
+
+        Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+        Scene cur_scene = stage.getScene();
+
+        cur_scene.setRoot(new_root);
+    }
+
     public void music(ActionEvent e) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/music.fxml"));
         Parent new_root = loader.load();

@@ -110,23 +110,11 @@ public class GameController{
         cd_timer.play();
     }
 
-    // public void elapsed_timer(){
-    //     start_time = System.currentTimeMillis();
-
-    //     new AnimationTimer(){
-    //         @Override
-    //         public void handle(long now){
-    //             long elapsed_millis = System.currentTimeMillis() - start_time;
-    //             seconds_elapsed = (elapsed_millis / 1000) % 60;
-    //             time_label.setText("Time: " + seconds_elapsed);
-    //             System.out.println(seconds_elapsed);
-    //         }
-    //     }.start();
-    // }
-
     // ---------- INITIALIZE GAME ----------
     @FXML
     public void initialize(){
+        String map = MapController.map;
+        System.out.println(map);
 
         game_objects = new HashMap<>() {{
             put("tree", new Image("objects/tree.png"));
@@ -136,6 +124,9 @@ public class GameController{
             put("start", new Image("objects/start.png"));
             put("lamp_left", new Image("objects/light_post1.png"));
             put("lamp_right", new Image("objects/light_post2.png"));
+            put("bush2", new Image("objects/bush2.png"));
+            put("bush3", new Image("objects/bush3.png"));
+            put("palm_tree2", new Image("objects/palm-tree2.png"));
 
         }};
 
@@ -148,34 +139,93 @@ public class GameController{
             Line line = new Line();
             line.z = i * SEG_LENGTH;
 
+            // Check and create different maps
 
-            // curve
-            if (i > 300 && i < 700) line.curve = .5f;
+            if (map.equals("Shanghai")){
 
-            // hill
-            if (i > 750 && i < 1000) line.y = (float)(Math.sin(i / 30.0) * 1500);
+                // Curve
+                if (i > 200 && i < 500){
+                    line.curve = 2.5f;
+                }
 
-            if (i > 1000 && i < 1600) line.curve = -2.5f;
+                if (i > 500 && i < 630){
+                    line.y = (float)(Math.sin(i / 40.0) * 2500);
+                }
 
-            // obects
-            if (i % 20 == 0) {
-                line.sprite_x = -2.5f;
-                line.sprite = game_objects.get("tree");
-            }
+                if (i > 630 && i < 750){
+                    line.curve = -3f;
+                }
 
-            if (i > 300 && i % 19 == 0){
-                line.sprite_x = 2.5f;
-                line.sprite = game_objects.get("palm_tree");
-            }
+                if (i > 750 && i < 1010){
+                    line.y = (float)(Math.sin(i / 40.0) * -2500);
+                    line.curve = .5f;
+                }
 
-            if (i == 150){
-                line.sprite_x = -0.5f;
-                line.sprite = game_objects.get("start");
-            }
+                if (i > 1010 && i < 1200){
+                    line.curve = 3f;
+                }
 
-            if (i==1200){
-                line.sprite_x = -.5f;
-                line.sprite = game_objects.get("finish");
+                if (i > 1200 && i < 1500){
+                    line.curve = -5f;
+                }
+
+                if (i > 1500 && i < 2010){
+                    line.y = (float)(Math.sin(i / 40.0) * 4000);
+                }
+
+                if (i > 2500 && i < 2700){
+                    line.curve = -3f;
+                }
+
+                if (i > 2700 && i < 3000){
+                    line.curve = 3f;
+                }
+
+                if (i % 20 == 0){
+                    line.sprite_x = -2.5f;
+                    line.sprite = game_objects.get("tree");
+                }
+
+                if (i % 19 == 0){
+                    line.sprite_x = -2.5f;
+                    line.sprite = game_objects.get("bush");
+                }
+
+                if (i % 200 == 0){
+                    line.sprite_x = -2.5f;
+                    line.sprite = game_objects.get("palm_tree");
+                }
+
+                // // curve
+                // if (i > 300 && i < 700) line.curve = .5f;
+
+                // // hill
+                // if (i > 750 && i < 1000){
+                //     line.y = (float)(Math.sin(i / 30.0) * 1500);
+                //     line.curve = -0.5f;
+                // }
+                // if (i > 1000 && i < 1600) line.curve = -2.5f;
+
+                // obects
+                // if (i % 20 == 0) {
+                //     line.sprite_x = -2.5f;
+                //     line.sprite = game_objects.get("tree");
+                // }
+
+                // if (i % 19 == 0){
+                //     line.sprite_x = 5f;
+                //     line.sprite = game_objects.get("lamp_right");
+                // }
+
+                // if (i == 150){
+                //     line.sprite_x = -0.5f;
+                //     line.sprite = game_objects.get("start");
+                // }
+
+                // if (i==1200){
+                //     line.sprite_x = -.5f;
+                //     line.sprite = game_objects.get("finish");
+                // }
             }
 
             lines.add(line);
