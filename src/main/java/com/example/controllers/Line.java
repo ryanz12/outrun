@@ -28,7 +28,7 @@ public class Line {
         double h = sprite.getHeight();
 
         double dest_X = X + scale * sprite_x * WIDTH / 2;
-        double dest_Y = Y + 2;
+        double dest_Y = Y + -4;
         double dest_W = w * W / 266;
         double dest_H = h * W / 266;
 

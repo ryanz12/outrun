@@ -62,6 +62,7 @@ public class MusicController {
 
         media = new Media(songs.get(song_index)[2]);
         media_player = new MediaPlayer(media);
+        media_player.setVolume(SettingsController.volume);
 
         media_player.setOnEndOfMedia(() -> {
             song_index = (song_index + 1) % max_song;
@@ -87,6 +88,9 @@ public class MusicController {
 
         media = new Media(songs.get(index)[2]);
         media_player = new MediaPlayer(media);
+        // System.out.println(SettingsController.volume);
+
+        media_player.setVolume(SettingsController.volume);
 
         if (playing){
             media_player.play();

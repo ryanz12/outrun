@@ -1,0 +1,15 @@
+@font-face {
+    font-family: "Press Start 2P";
+    src: url("../fonts/main_font.ttf");
+}
+
+.label {
+    -fx-font-family: "Press Start 2P";
+}
+
+.button {
+    -fx-font-family: "Press Start 2P";
+    -fx-background-color: none;
+    -fx-text-fill: white;
+    -fx-font-size: 24px;
+}

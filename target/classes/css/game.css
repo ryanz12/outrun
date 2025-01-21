@@ -12,3 +12,12 @@
 .cdLabel {
     -fx-font-size: 64px;
 }
+
+.button {
+    -fx-font-family: "Press Start 2P";
+}
+
+.pauseHolder {
+    -fx-background-color: rgba(0, 0, 0, 0.495);
+    -fx-font-size: 24px;
+}

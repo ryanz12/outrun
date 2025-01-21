@@ -18,7 +18,7 @@
             <Image url="@../backgrounds/music_background.png" />
          </image>
       </ImageView>
-      <AnchorPane layoutX="337.0" layoutY="177.0" prefHeight="295.0" prefWidth="784.0" style="-fx-border-radius: ;" styleClass="screenPane">
+      <AnchorPane layoutX="337.0" layoutY="177.0" prefHeight="295.0" prefWidth="784.0" styleClass="screenPane">
          <children>
             <GridPane hgap="20.0" layoutX="79.0" layoutY="173.0">
               <columnConstraints>
