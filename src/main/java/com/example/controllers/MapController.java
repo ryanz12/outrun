@@ -23,6 +23,7 @@ public class MapController {
 
     @FXML
     public void initialize(){
+        // Disable the play button if no map is selected
         play_button.setDisable(true);
     }
 
@@ -35,7 +36,7 @@ public class MapController {
 
     public void play_game(ActionEvent e) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/game.fxml"));
-        Parent newRoot = loader.load(); // Load the new FXML file
+        Parent newRoot = loader.load(); // Load new FXML file
 
         Stage stage = (Stage) ((Node) e.getSource()).getScene().getWindow(); // Get the current stage
         Scene currentScene = stage.getScene(); // Get the current scene
@@ -43,11 +44,11 @@ public class MapController {
         // Replace the root of the current scene with the new root
         currentScene.setRoot(newRoot);
 
-        // Optionally, set up the controller for the new view
+        // Set up the controller for the new view to call listen
         GameController controller = loader.getController();
         controller.listen(currentScene);
 
-        // Request focus for the new root
+        // Request focus for the new root for the keybinds to work
         newRoot.requestFocus();
     }
 

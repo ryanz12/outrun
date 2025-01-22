@@ -19,7 +19,7 @@ public class Player {
     public Player(GraphicsContext gc){
        this.gc = gc;
 
-       // initalize car images
+       // Initalize car images
        car_images = new HashMap<>() {{
             put(PLAYER_DIRECTIONS.STRAIGHT, List.of(
                 new Image("/player/straight1.png"),
@@ -89,6 +89,7 @@ public class Player {
     }
 
     public void render(double x, double y){
+        // Animate the car by going through the list 
         List <Image> frames = car_images.get(player_direction);
         Image frame = frames.get(current_frame % frames.size());
         gc.drawImage(frame, x, y, frame.getWidth() * SCALE, frame.getHeight() * SCALE);
@@ -97,6 +98,7 @@ public class Player {
     }
 
     public void set_direction(PLAYER_DIRECTIONS dir){
+        // Set the direction if its different
         if (player_direction != dir) this.player_direction = dir;
         else return;
 

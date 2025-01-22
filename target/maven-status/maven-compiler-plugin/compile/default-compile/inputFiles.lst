@@ -1,11 +1,10 @@
 /home/ryan/Documents/code/ics_FPT/src/main/java/com/example/App.java
 /home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/Constants.java
-/home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/Enemy.java
 /home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/GameController.java
 /home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/Line.java
+/home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/ManualController.java
 /home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/MapController.java
 /home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/MenuController.java
 /home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/MusicController.java
 /home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/Player.java
 /home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/SettingsController.java
-/home/ryan/Documents/code/ics_FPT/src/main/java/com/example/controllers/temp.java

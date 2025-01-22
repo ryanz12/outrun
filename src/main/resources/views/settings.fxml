@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" stylesheets="@../css/settings.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controllers.SettingsController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" stylesheets="@../css/settings.css" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controllers.SettingsController">
    <children>
       <ImageView fitHeight="720.0" fitWidth="1280.0" preserveRatio="true">
          <image>
@@ -35,5 +35,11 @@
             <Font size="16.0" />
          </font>
       </Label>
+      <Label layoutX="177.0" layoutY="237.0" text="FOV" textFill="WHITE">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Slider fx:id="fov_bar" blockIncrement="0.1" layoutX="320.0" layoutY="238.0" max="1.0" min="0.15" value="0.94" />
    </children>
 </AnchorPane>

@@ -15,15 +15,17 @@ public class Line {
     }
 
     public void project(float cam_x, float cam_y, float cam_z){
-        scale = CAM_DEPTH / Math.max(0.1f, z - cam_z); //avoid dividing by 0
+        scale = CAM_DEPTH / Math.max(0.1f, z - cam_z); // Avoid dividing by 0
         X = (1 + scale * (x - cam_x)) * WIDTH / 2;
         Y = (1 - scale * (y - cam_y)) * HEIGHT / 2;
         W = scale * ROAD_WIDTH * WIDTH / 2;
     }
 
     public void draw_sprite(GraphicsContext gc){
+        // Skip if the sprite is null
         if (sprite == null) return;
 
+        // Calculate the size of sprite using the relative pos from player
         double w = sprite.getWidth();
         double h = sprite.getHeight();
 
@@ -37,12 +39,16 @@ public class Line {
 
         // System.out.println("dest_x: " + dest_X + ", dest_y: " + dest_Y);
 
+        // Clip is supposed to make sure the trees don't show if the player
+        // can't see it, ex. when the player is under a hill but it doesn't
+        // work for some reason
         double clip_H = dest_Y + dest_H - clip;
         // System.out.println("Clip: " + clip + " Clip_H: " + clip_H + " Dest_H: " + dest_H);
 
         if (clip_H < 0) clip_H = 0;
         if (clip_H >= dest_H) return;
 
+        // Draw image
         gc.drawImage(
             sprite,
             0, 0, w, h - h * clip_H / dest_H,

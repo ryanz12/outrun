@@ -19,19 +19,20 @@ import javafx.stage.Stage;
  * https://stackoverflow.com/questions/33336542/javafx-custom-fonts
  * https://stackoverflow.com/questions/43557722/javafx-border-radius-background-color
  * https://stackoverflow.com/questions/22512319/what-is-aabb-collision-detection
+ * 
+ * @note - run the program by entering "mvn javafx:run" in the terminal
  */
 
-
 /* TODO
- * - collision detecion
- * - audio
- * - ai
- * - more maps
- * - menu
- * - game ui
- * - multiple roads (branching)??
- * - updaet trailer
- * - credits page?
+ * - collision detecion - no
+ * - audio - yes
+ * - ai -no
+ * - more maps -yes
+ * - menu - yes
+ * - game ui -yes
+ * - multiple roads (branching)?? - no
+ * - updaet trailer - yes
+ * - credits page? -no
  * */
 
 public class App extends Application {

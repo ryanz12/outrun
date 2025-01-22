@@ -37,6 +37,8 @@ public class MusicController {
 
     @FXML
     public void initialize(){
+
+        // Add songs to the HashMap to access song info quickly
         songs = new HashMap<>() {{
             put(1, new String[]{
                 "Tokyo Drift",
@@ -56,10 +58,17 @@ public class MusicController {
                 getClass().getResource("/music/see_you_again.mp3").toExternalForm(),
                 getClass().getResource("/music/covers/sya.png").toExternalForm()
             });
+            put(4, new String[]{
+                "Red sun in the sky",
+                "Chairman Mao",
+                getClass().getResource("/music/red_sun.mp3").toExternalForm(),
+                getClass().getResource("/music/covers/red_sun.png").toExternalForm()
+            });
         }};
 
         max_song = songs.size();
 
+        // Initalize the media player 
         media = new Media(songs.get(song_index)[2]);
         media_player = new MediaPlayer(media);
         media_player.setVolume(SettingsController.volume);
@@ -83,7 +92,7 @@ public class MusicController {
     }
 
     public void new_song(int index){
-
+        // Pause the current song then play a new one
         media_player.pause();
 
         media = new Media(songs.get(index)[2]);
@@ -108,6 +117,7 @@ public class MusicController {
     }
 
     public void previous(){
+        // Wrap around 
         if (song_index - 1 == 0){
             song_index = max_song;
         }
@@ -119,6 +129,7 @@ public class MusicController {
     }
 
     public void next(){
+        // Wrap around
         if (song_index + 1 > max_song){
             song_index = 1;
         }

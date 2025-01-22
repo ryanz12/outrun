@@ -1,5 +1,15 @@
 package com.example.controllers;
 
+import static com.example.controllers.Constants.CENTRIFRUGAL_FORCE_M;
+import static com.example.controllers.Constants.HEIGHT;
+import static com.example.controllers.Constants.MAX_ACCEL;
+import static com.example.controllers.Constants.MAX_VEL;
+import static com.example.controllers.Constants.ROAD_WIDTH;
+import static com.example.controllers.Constants.SCROLL_SPEED;
+import static com.example.controllers.Constants.SEG_LENGTH;
+import static com.example.controllers.Constants.SEG_WIDTH_M;
+import static com.example.controllers.Constants.WIDTH;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,7 +18,6 @@ import java.util.Random;
 import java.util.Set;
 
 import com.example.controllers.Player.PLAYER_DIRECTIONS;
-import static com.example.controllers.Constants.*;
 
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
@@ -32,42 +41,39 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class GameController{
-    // ---------- INITALIZE VARIAVLES ----------
-    public ArrayList <Line> lines = new ArrayList<>();
-    public int N = 16000;
-    public double pos = 0;
-    public double vel = 0;
-    public double d_vel = 0;
-    public int turn_vel = 200;
-    public int player_x = 0;
 
-    public Map <String, Image> game_objects;
+    // ---------- INITALIZE VARIAVLES ----------
+    public ArrayList <Line> lines   = new ArrayList<>();
+    public int N                    = 10000;
+    public double pos               = 0;
+    public double vel               = 0;
+    public double d_vel             = 0;
+    public int turn_vel             = 200;
+    public int player_x             = 0;
     public Set<KeyCode> active_keys = new HashSet<>();
+    public double bg_offset         = 0;
+    public Image background         = null;
+    public boolean game_started     = false;
+    public int countdown            = 3;
+    public long total_time          = 70;
+    public boolean paused           = false;
+    public boolean game_over        = false;
+
+    public long start_time, seconds_elapsed;
+    public Random rand = new Random();
+    private MediaPlayer theme_player, mp;
+    public Map <String, Image> game_objects;
     public Player player;
 
-    public double bg_offset = 0;
-    public Image background = null;
-
-    public boolean game_started = false;
-    public int countdown = 3;
-    public long start_time, seconds_elapsed;
-
-    public long total_time = 120;
-
-    public Random rand = new Random();
-
-    private MediaPlayer theme_player, mp;
-
-    public boolean paused = false;
-
+    // FXML variables
     @FXML
     public Canvas canvas;
 
     @FXML
-    public AnchorPane anchor_pane, pause_ui;
+    public AnchorPane anchor_pane, pause_ui, over_ui;
 
     @FXML
-    public Label speed_label, cd_label, time_label;
+    public Label speed_label, cd_label, time_label, over_label;
 
     // ---------- 2D TO 3D PROJECTION (QUADRILATERAL) ----------
     //
@@ -99,7 +105,10 @@ public class GameController{
         gc.closePath();
     }
 
+    //---------- KEYBOARD LISTENER ----------
     public void listen(Scene scene){
+
+        // Edit the hashset to get smooth movement
         scene.setOnKeyPressed(e -> {
             active_keys.add(e.getCode());
             if (e.getCode() == KeyCode.ESCAPE){
@@ -108,14 +117,14 @@ public class GameController{
         });
         scene.setOnKeyReleased(e -> active_keys.remove(e.getCode()));
 
-        
-
+        // Start the game countdown
         countdown();
     }
 
     public void countdown(){
         game_started = false;
 
+        // Timer animation
         Timeline cd_timer = new Timeline(
             new KeyFrame(Duration.seconds(1), e -> {
                 if (countdown > 0){
@@ -123,6 +132,7 @@ public class GameController{
                     countdown--;
                 }
                 else {
+                    // Start the game
                     game_started = true;
                     cd_label.setVisible(false);
                     start_time = System.currentTimeMillis();
@@ -136,25 +146,34 @@ public class GameController{
     // ---------- INITIALIZE GAME ----------
     @FXML
     public void initialize(){
+
+        // Temporarily remove the pause and game over ui
         pause_ui.setVisible(false);
+        over_ui.setVisible(false);
+
+        // Get the map
         String map = MapController.map;
         System.out.println(map);
 
+        // Play the background music
         Media m = new Media(getClass().getResource("/sounds/theme.mp3").toExternalForm());
         theme_player = new MediaPlayer(m);
         theme_player.setVolume(SettingsController.volume);
         theme_player.play();
 
-
+        // Change the background according to map
         if (map.equals("Shanghai")){
             background = new Image("backgrounds/night_sky.png");
         }
-
         else if (map.equals("Cairo")){
             background = new Image("backgrounds/egypt.png");
         }
+        else {
+            background = new Image("backgrounds/la.png");
+        }
 
-        game_objects = new HashMap<>() {{
+        // HashMap for the game objects so it can be accessed easily
+        game_objects = new HashMap<String, Image>() {{
             put("tree", new Image("objects/tree.png"));
             put("palm_tree", new Image("objects/palm_tree.png"));
             put("bush", new Image("objects/bush.png"));
@@ -171,10 +190,10 @@ public class GameController{
             put("bill2", new Image("objects/billboard03.png"));
             put("bill3", new Image("objects/billboard04.png"));
             put("house", new Image("objects/boat_house.png"));
+            put("column", new Image("objects/column.png"));
         }};
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
-
         player = new Player(gc);
 
         // Create the road
@@ -182,17 +201,18 @@ public class GameController{
             Line line = new Line();
             line.z = i * SEG_LENGTH;
 
-            // Check and create different maps
-
+            // Check map and create track accordingly
             if (map.equals("Shanghai")){
 
-                // Curve
+                // Line.curve changes the curvature of the road
+                // Line.y changes the slope of the road
+
                 if (i > 200 && i < 500){
                     line.curve = 2.5f;
                 }
 
                 if (i > 500 && i < 630){
-                    line.y = (float)(Math.sin(i / 40.0) * 2500);
+                    line.y = (float)(Math.sin(Math.PI * (i - 500) / 130.0) * 6000);
                 }
 
                 if (i > 630 && i < 750){
@@ -200,7 +220,7 @@ public class GameController{
                 }
 
                 if (i > 750 && i < 1010){
-                    line.y = (float)(Math.sin(i / 40.0) * -2500);
+                    line.y = (float)(-Math.sin(Math.PI * (i - 750) / 260.0) * 2500);
                     line.curve = .5f;
                 }
 
@@ -213,7 +233,7 @@ public class GameController{
                 }
 
                 if (i > 1500 && i < 2010){
-                    line.y = (float)(Math.sin(i / 40.0) * 4000);
+                    line.y = (float)(Math.sin(Math.PI * (i - 1500) / 510.0) * 4000);
                 }
 
                 if (i > 2500 && i < 2700){
@@ -226,7 +246,7 @@ public class GameController{
 
                 if (i > 3000 && i < 3600){
                     line.curve = (float)(Math.sin(i / 50.0)*7);
-                    line.y = (float)(Math.sin(i / 50.0) * 1500);
+                    line.y = (float)(Math.sin(Math.PI * (i - 3000) / 600.0) * 1500);
                 }
 
                 if (i > 3600 && i < 4000){
@@ -238,11 +258,11 @@ public class GameController{
                 }
 
                 if (i > 4500 && i < 4800){
-                    line.y = (float)(Math.sin(i / 40.0) * 1500);
+                    line.y = (float)(Math.sin(Math.PI * (i - 4500) / 300.0) * 1500);
                 }
 
                 if (i > 4900 && i < 5400){
-                    line.y = (float)(Math.sin(i / 40.0) * 1500);
+                    line.y = (float)(Math.sin(Math.PI * (i - 4900) / 500.0) * 6000);
                     line.curve = (float)(-Math.sin(i / 100.0) * rand.nextInt(4, 9));
                 }
 
@@ -251,7 +271,7 @@ public class GameController{
                 }
                 
                 if (i > 7000 && i < 7400){
-                    line.y = (float)(Math.sin(i / 40.0) * 1500);
+                    line.y = (float)(Math.sin(Math.PI * (i - 7000) / 400.0) * 4000);
                     line.curve = 2;
                 }
 
@@ -260,14 +280,10 @@ public class GameController{
                 }
 
                 if (i > 8000 && i < 8500){
-                    line.y = (float)(Math.abs(Math.cos(i / 30.0) * 1500));
+                    line.y = (float)(Math.sin(Math.PI * (i - 8000) / 500.0) * 8000);
                 }
                 
-                if (i > 8500){
-                    line.y = (float)(Math.sin(i / 30.0) * 1500); 
-                }
-                
-
+                // Generate objects on the side of the road
                 if (i % 10 == 0){
                     line.sprite_x = -rand.nextFloat(3,9);
                     line.sprite = game_objects.get("tree");
@@ -317,15 +333,227 @@ public class GameController{
                     line.sprite_x = 5f;
                     line.sprite = game_objects.get("bill1");
                 }
+                                
+                if (i == 8800){
+                    line.sprite_x = -0.5f;
+                    line.sprite = game_objects.get("finish");
+                }
             }
             else if (map.equals("Cairo")){
+                if (i > 300 && i < 1000){
+                    line.curve = (float)(Math.cos(i / 50) * rand.nextInt(2, 6));
+                }
+
+                if (i > 1000 && i < 1240){
+                    line.curve = -3f;
+                    line.y = (float)(Math.sin(Math.PI * (i - 1000) / 240.0) * 4000);
+                }
                 
+                if (i > 1300 && i < 1600){
+                    line.curve = -4f;
+                }
+
+                if (i > 1600 && i < 2200){
+                    line.y = (float)(Math.sin(Math.PI * (i - 1600) / 600.0) * 6000);
+                }
+
+                if (i > 2300 && i < 2700){
+                    line.curve = 5f;
+                }
+
+                if (i > 2700 && i < 3000){
+                    line.curve = 0.5f;
+                }
+
+                if (i > 3600 && i < 4200){
+                    line.curve = -6f;
+                }
+
+                if (i > 4500 && i < 4800){
+                    line.y = (float)(Math.sin(Math.PI * (i - 4500) / 300.0) * 2500);
+                    line.curve = -2.5f;
+                }
+
+                if (i > 4900 && i < 5200){
+                    line.curve = (float)(Math.sin(i / 40.0) * rand.nextInt(2, 7));
+                    line.y = (float)(Math.sin(Math.PI * (i  - 4900) / 300.0) * 1500);
+                }
+
+                if (i > 5200 && i < 5600){
+                    line.curve = rand.nextInt(2, 6);
+                }
+                
+                if (i > 5600 && i < 6000){
+                    line.y = (float)(Math.sin(Math.PI * (i - 5600) / 400.0) * 3000);
+                    line.curve = 0.5f;
+                }
+                
+                if (i > 6000 && i < 6400){
+                    line.y = (float)(-Math.sin(Math.PI * (i - 6000) / 400.0) * 4000);
+                    line.curve = 4f;
+                }
+
+                if (i > 6450 && i < 7000){
+                    line.curve = -6f;
+                }
+
+                if (i > 7000 && i < 7600){
+                    line.curve = 6f;
+                    line.y = (float)(-Math.sin(Math.PI * (i - 7000) / 600.0) * 4000);
+                }
+
+                if (i > 7700 && i < 7800){
+                    line.curve = 3.5f;
+                }
+
+                if (i > 8100 && i < 8500){
+                    line.curve = (float)(Math.cos(i / 40.0) * 4);
+                    line.y = (float)(-Math.sin(Math.PI * (i - 8100) / 400.0) * 2000);
+                }
+                
+                if (i % 25 == 0){
+                    line.sprite_x = rand.nextFloat(5, 8);
+                    line.sprite = game_objects.get("boulder1");
+                }
+
+                if (i % 24 == 0){
+                    line.sprite_x = -rand.nextFloat(5, 8);
+                    line.sprite = game_objects.get("boulder2");
+                }
+                
+                if (i % 600 == 0){
+                    line.sprite_x = 5f;
+                    line.sprite = game_objects.get("bill2");
+                }
+
+                if (i % 20 == 0){
+                    line.sprite_x = -rand.nextFloat(5, 8);
+                    line.sprite = game_objects.get("column");
+                }
+
+                if (i % 21 == 0){
+                    line.sprite_x = 3f;
+                    line.sprite = game_objects.get("bush2");
+                }
+
+                if (i % 22 == 0){
+                    line.sprite_x = -3f;
+                    line.sprite = game_objects.get("bush3");
+                }
+
+                if (i % 23 == 0){
+                    line.sprite_x = 3f;
+                    line.sprite = game_objects.get("palm_tree2");
+                }
+                
+                if (i == 8800){
+                    line.sprite_x = -0.5f;
+                    line.sprite = game_objects.get("finish");
+                }
+            }
+            else {
+                // LA map
+                if (i > 300 && i < 1000){
+                    line.curve = (float)(Math.cos(i / 50) * rand.nextInt(2, 6));
+                }
+
+                if (i > 1000 && i < 1240){
+                    line.curve = -3f;
+                    line.y = (float)(Math.sin(Math.PI * (i - 1000) / 240.0) * 4000);
+                }
+                
+                if (i > 1300 && i < 1600){
+                    line.curve = -4f;
+                }
+
+                if (i > 1600 && i < 2200){
+                    line.y = (float)(Math.sin(Math.PI * (i - 1600) / 600.0) * 6000);
+                }
+
+                if (i > 2300 && i < 2700){
+                    line.curve = 5f;
+                }
+
+                if (i > 2700 && i < 3000){
+                    line.curve = 0.5f;
+                }
+
+                if (i > 3600 && i < 4200){
+                    line.curve = -6f;
+                }
+
+                if (i > 4500 && i < 4800){
+                    line.y = (float)(Math.sin(Math.PI * (i - 4500) / 300.0) * 2500);
+                    line.curve = -2.5f;
+                }
+
+                if (i > 4900 && i < 5400){
+                    line.y = (float)(Math.sin(Math.PI * (i - 4900) / 500.0) * 6000);
+                    line.curve = (float)(-Math.sin(i / 100.0) * rand.nextInt(4, 9));
+                }
+
+                if (i > 6000 && i < 6400){
+                    line.curve = 5f;
+                }
+                
+                if (i > 7000 && i < 7400){
+                    line.y = (float)(Math.sin(Math.PI * (i - 7000) / 400.0) * 4000);
+                    line.curve = 2;
+                }
+
+                if (i > 7500 && i < 7900){
+                    line.curve = (float)(-Math.cos(i / 30) * rand.nextInt(2, 6));
+                }
+
+                if (i > 8000 && i < 8500){
+                    line.y = (float)(Math.sin(Math.PI * (i - 8000) / 500.0) * 8000);
+                }
+                
+                if (i % 22 == 0){
+                    line.sprite_x = -3f;
+                    line.sprite = game_objects.get("lamp_left");
+                }
+
+                if (i % 23 == 0){
+                    line.sprite_x = 3f;
+                    line.sprite = game_objects.get("lamp_right");
+                }
+
+                if (i % 24 == 0){
+                    line.sprite_x = rand.nextFloat(3, 8);
+                    line.sprite = game_objects.get("bush");
+                }
+
+                if (i % 25 == 0){
+                    line.sprite_x = -rand.nextFloat(3, 8);
+                    line.sprite = game_objects.get("tree");
+                }
+
+                if (i % 20 == 0){
+                    line.sprite_x = rand.nextFloat(4, 8);
+                    line.sprite = game_objects.get("palm_tree");
+                }
+
+                if (i % 21 == 0){
+                    line.sprite_x = -rand.nextFloat(4, 8);
+                    line.sprite = game_objects.get("palm_tree");
+                }
+
+                if (i % 600 == 0){
+                    line.sprite_x = 5f;
+                    line.sprite = game_objects.get("bill3");
+                }
+
+                if (i == 8800){
+                    line.sprite_x = -0.5f;
+                    line.sprite = game_objects.get("finish");
+                }
             }
 
             lines.add(line);
         }
 
-        // main game loop
+        // Main game loop
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now){
@@ -355,6 +583,7 @@ public class GameController{
             dx += cur_line.curve;
             cur_line.clip = max_y;
 
+            // Create different color themes for different maps
             Color grass, rumble, road, road_lines;
             grass = rumble = road = road_lines = Color.rgb(0,0,0);
 
@@ -368,14 +597,21 @@ public class GameController{
                 road_lines = (n/3)%2==1?Color.rgb(161, 178, 186):Color.rgb(34, 54, 56);
             }
             else if (MapController.map.equals("Cairo")){
-                grass = (n/3)%2==1?Color.rgb(202, 134, 45):Color.rgb(238, 197, 100);
-                rumble = (n/3)%2==1?Color.rgb(152, 110, 25):Color.rgb(212, 185, 113);
-                road = (n/3)%2==1?Color.rgb(49, 64, 76):Color.rgb(34, 54, 56);
-                road_lines = (n/3)%2==1?Color.rgb(161, 178, 186):Color.rgb(34, 54, 56);
+                grass = (n/3)%2==1?Color.rgb(228, 207, 161):Color.rgb(194, 169, 127);
+                rumble = (n/3)%2==1?Color.rgb(201, 164, 108):Color.rgb(186, 124, 82);
+                road = (n/3)%2==1?Color.rgb(107, 79, 64):Color.rgb(92, 58, 46);
+                road_lines = (n/3)%2==1?Color.rgb(232, 185, 35):Color.rgb(199, 150, 63);
+            }
+            else {
+                grass = (n/3)%2==1?Color.rgb(16, 200, 16):Color.rgb(0, 154, 0);
+                rumble = (n/3)%2==1?Color.rgb(255, 255, 255):Color.rgb(0, 0, 0);
+                road = (n/3)%2==1?Color.rgb(107, 107, 107):Color.rgb(100, 100, 100);
+                road_lines = (n/3)%2==1?Color.rgb(255, 255, 255):Color.rgb(100, 100, 100);
             }
 
             Line prev_line = lines.get((n-1+N)%N);
 
+            // Render road, grass, road lines, etc
             draw_quad(gc, grass, 0, (int)prev_line.Y, WIDTH, 0, (int)cur_line.Y, WIDTH);
             draw_quad(gc, rumble, (int)prev_line.X, (int)prev_line.Y, (int)(prev_line.W*SEG_WIDTH_M), (int)cur_line.X, (int)cur_line.Y, (int)(cur_line.W*SEG_WIDTH_M));
             draw_quad(gc, road, (int)prev_line.X, (int)prev_line.Y, (int)prev_line.W, (int)cur_line.X, (int)cur_line.Y, (int)cur_line.W);
@@ -383,21 +619,24 @@ public class GameController{
             draw_quad(gc, road, (int)prev_line.X, (int)prev_line.Y, (int)(prev_line.W/3.4), (int)cur_line.X, (int)cur_line.Y, (int)(cur_line.W/3.4));
         }
 
-
+        // Render game objects
         for (int n=start_pos + 500; n>start_pos; n--){
             lines.get(n%N).draw_sprite(gc);
         }
-
     }
 
-    // ---------- rendering game components ----------
+    // ---------- RENDERING GAME COMPONENTS ----------
     public void render(GraphicsContext gc) {
         // Clear screen
         gc.clearRect(0, 0, WIDTH, HEIGHT);
 
+        // Create two backgrounds so that when the background moves as
+        // the player turns, the TWO backgrounds also move to imitate a
+        // turning effect
         double adjusted_bg_offset = bg_offset % background.getWidth();
         if (adjusted_bg_offset < 0) {
-            adjusted_bg_offset += background.getWidth(); // Fix for negative offsets
+            // Fix for negative offsets
+            adjusted_bg_offset += background.getWidth(); 
         }
 
         // Draw the first background
@@ -407,7 +646,7 @@ public class GameController{
             -adjusted_bg_offset, 0, WIDTH, HEIGHT / 1.75
         );
 
-        // Draw the second background if the first one has gone off-screen
+        // Draw the second background if the first one has gone off screen
         if (adjusted_bg_offset > 0) {
             gc.drawImage(
                 background,
@@ -417,15 +656,35 @@ public class GameController{
         }
 
         render_road(gc);
-        player.render(WIDTH / 2, HEIGHT - 200);
 
+        // Draw the player
+        player.render(WIDTH / 2, HEIGHT - 200);
     }
 
     public void update() {
-        // skip game logic if game not started
+        // Skip game logic if game hasn't started
         if (!game_started) return;
+
+        // Game has ended
+        // System.out.println(pos);
+
+        // Game over conditions
+        if (pos > 1_760_000 || (time_label.getText().equals("Time: 0 s"))){
+            if (pos > 1760000){
+                over_label.setText("You win! You are as fast as a rabbit!");
+            }
+            else {
+                over_label.setText("You lose! You are as slow as a turtle!");
+            }
+            game_over = true;
+        }
+
+        if (game_over){
+            over_ui.setVisible(true);
+            return;
+        }
         
-        // game paused
+        // Game paused
         if (paused){
             pause_ui.setVisible(true);
             return;
@@ -434,7 +693,7 @@ public class GameController{
             pause_ui.setVisible(false);
         }
 
-        // Calc time passed
+        // Calculate time passed since start & display
         long elapsed_millis = System.currentTimeMillis();
         seconds_elapsed = (elapsed_millis - start_time) / 1000;
         time_label.setText("Time: " + (total_time - seconds_elapsed) + " s");
@@ -443,32 +702,33 @@ public class GameController{
         boolean uphill = is_uphill(seg_index);
         boolean downhill = is_downhill(seg_index);
         boolean offroad = player_x <= -ROAD_WIDTH || player_x + player.get_width() >= ROAD_WIDTH;
-        System.out.println(lines.get(seg_index % N).sprite);
+        // System.out.println(lines.get(seg_index % N).sprite);
 
-
+        // Keyboard inputs
         if (active_keys.contains(KeyCode.W)) {
 
-            // play a engine sound once in a short while
+            // Play a engine sound once in a short while
             if (Math.random() < 0.1){
                 play_sound("engine.mp3", SettingsController.volume * 0.8);
             }
 
+            // Slowly increase the Δv of car 
             d_vel += 0.1;
-
-            // cap acceleration limit
+ 
+            // Cap acceleration limit
             if (d_vel > MAX_ACCEL) d_vel = MAX_ACCEL;
             vel += d_vel;
 
-            // cap speed limit
+            // Cap speed limit
             if (vel > MAX_VEL) vel = MAX_VEL;
 
-            // outside road
+            // Outside road, decrease speed
             if (offroad){
                 vel *= 0.27;
                 if (vel < 50) vel = 50;
             }
 
-            // centrifrugal force
+            // Centrifrugal force
             Line c_line = lines.get(seg_index % N);
             if (c_line.curve != 0 && !offroad){
                 player_x -= c_line.curve*vel*CENTRIFRUGAL_FORCE_M;
@@ -479,22 +739,23 @@ public class GameController{
             else player.set_direction(PLAYER_DIRECTIONS.STRAIGHT);
         }
         else {
-            // decel naturally
+            // Δv decreases to decel naturally
             d_vel -= 0.15;
             if (d_vel < 0 ) d_vel = 0;
 
-            // when d_vel reaches 0 but the car is still going
+            // When d_vel reaches 0 but the car is still going
             if (d_vel == 0 && vel > 0){
                 vel -= 5;
             }
 
+            // Decel & make sure vel is never negative
             vel -= d_vel;
             if (vel < 0) vel = 0;
         }
 
-
         // System.out.println("vel: " + vel + " d_vel: " + d_vel);
 
+        // Handle player turning
         if (active_keys.contains(KeyCode.A)) {
             player_x -= vel * 0.2;
             handle_turning_dur(uphill, downhill, "l", seg_index);
@@ -504,16 +765,17 @@ public class GameController{
             handle_turning_dur(uphill, downhill, "", seg_index);
         }
 
+        // Reset the pos & speed of car if needed
         if (active_keys.contains(KeyCode.R)){
             player_x = 0;
             vel = 0;
             d_vel = 0;
         }
 
-        //debuggin
-        if (active_keys.contains(KeyCode.S)) {
-            vel = -400;
-        }
+        // Debugging
+        // if (active_keys.contains(KeyCode.S)) {
+        //     vel = -400;
+        // }
 
         // Background moving effect
         pos += vel;
@@ -531,31 +793,33 @@ public class GameController{
 
     private void handle_turning_dur(boolean up, boolean down, String dir, int seg_index){
 
-        // use smoke animation when vel over 300 and road is not straight
+        // Use smoke animation when vel over 300 and road is not straight
         if (vel > 300 && lines.get(seg_index % N).curve != 0){
+            // Play drift sound
             play_sound("drift.mp3", SettingsController.volume * 0.9);
 
-            // turning left
+            // Turning left
             if (dir.equals("l")){
                 if (up) player.set_direction(PLAYER_DIRECTIONS.UH_LEFT_SMOKE);
                 else if (down) player.set_direction(PLAYER_DIRECTIONS.DH_LEFT_SMOKE);
                 else player.set_direction(PLAYER_DIRECTIONS.LEFT_SMOKE);
             }
-            // turning right
+            // Turning right
             else {
                 if (up) player.set_direction(PLAYER_DIRECTIONS.UH_RIGHT_SMOKE);
                 else if (down) player.set_direction(PLAYER_DIRECTIONS.DH_RIGHT_SMOKE);
                 else player.set_direction(PLAYER_DIRECTIONS.RIGHT_SMOKE);
             }
         }
-        // normal turn animations
+        // Normal turn animations without smoke
         else {
+            // Turning left
             if (dir.equals("l")){
                 if (up) player.set_direction(PLAYER_DIRECTIONS.UPHILL_LEFT);
                 else if (down) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_LEFT);
                 else player.set_direction(PLAYER_DIRECTIONS.LEFT);
             }
-            // turning right
+            // Turning right
             else {
                 if (up) player.set_direction(PLAYER_DIRECTIONS.UPHILL_RIGHT);
                 else if (down) player.set_direction(PLAYER_DIRECTIONS.DOWNHILL_RIGHT);
@@ -564,6 +828,7 @@ public class GameController{
         }
     }
 
+    // Useful methods, kinda self explanatory 
     private double round(double num, int decimals){
         return Math.round(num * Math.pow(10, decimals))/Math.pow(10,decimals);
     }
