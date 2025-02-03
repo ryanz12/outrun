@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
@@ -9,9 +10,11 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.media.Media?>
+<?import javafx.scene.media.MediaPlayer?>
 <?import javafx.scene.media.MediaView?>
 
-<AnchorPane fx:id="root_pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" stylesheets="@../css/menu.css" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controllers.MenuController">
+<AnchorPane fx:id="root_pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" stylesheets="@../css/menu.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controllers.MenuController">
    <children>
       <ImageView fitHeight="720.0" fitWidth="1280.0">
          <image>
@@ -73,7 +76,19 @@
             <Image url="@../backgrounds/logo.png" />
          </image>
       </ImageView>
-      <MediaView fx:id="media_view" fitHeight="720.0" fitWidth="1280.0" />
+      <MediaView fx:id="media_view" fitHeight="720.0" fitWidth="1280.0">
+         <mediaPlayer>
+            <MediaPlayer>
+               <media>
+                  <Media>
+                     <source>
+                        <URL value="@../videos/trailer.mp4" />
+                     </source>
+                  </Media>
+               </media>
+            </MediaPlayer>
+         </mediaPlayer>
+      </MediaView>
       <ProgressBar fx:id="loading_prog" layoutX="540.0" layoutY="667.0" prefWidth="200.0" progress="0.0" />
       <Label fx:id="trailer_label" layoutX="309.0" layoutY="624.0" text="Press ESC to skip the trailer, or watch the trailer" textFill="WHITE" />
    </children>

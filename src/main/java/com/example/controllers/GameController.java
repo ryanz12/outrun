@@ -43,14 +43,15 @@ import javafx.util.Duration;
 public class GameController{
 
     // ---------- INITALIZE VARIAVLES ----------
+    public Random rand              = new Random();
     public ArrayList <Line> lines   = new ArrayList<>();
+    public Set<KeyCode> active_keys = new HashSet<>();
     public int N                    = 10000;
     public double pos               = 0;
     public double vel               = 0;
     public double d_vel             = 0;
     public int turn_vel             = 200;
     public int player_x             = 0;
-    public Set<KeyCode> active_keys = new HashSet<>();
     public double bg_offset         = 0;
     public Image background         = null;
     public boolean game_started     = false;
@@ -60,7 +61,6 @@ public class GameController{
     public boolean game_over        = false;
 
     public long start_time, seconds_elapsed;
-    public Random rand = new Random();
     private MediaPlayer theme_player, mp;
     public Map <String, Image> game_objects;
     public Player player;
@@ -153,7 +153,7 @@ public class GameController{
 
         // Get the map
         String map = MapController.map;
-        System.out.println(map);
+        // System.out.println(map);
 
         // Play the background music
         Media m = new Media(getClass().getResource("/sounds/theme.mp3").toExternalForm());
@@ -207,11 +207,20 @@ public class GameController{
                 // Line.curve changes the curvature of the road
                 // Line.y changes the slope of the road
 
+                
                 if (i > 200 && i < 500){
                     line.curve = 2.5f;
                 }
 
                 if (i > 500 && i < 630){
+
+                    // The sine starts at 0, peaks in the average of the two indexes, and ends at 0
+                    // So the start value has to be 500 so that it would start at 0
+                    // At 630, it has to be 0, so it has to equal sin(pi) because pi is 180 deg
+                    // In the middle of the two, 565, it has to peak at 1, which means that i have to do sin(pi/2) cause thats 90 deg
+                    // And finding the height of the hill is easily applied by the amplitude
+                    // So I found the equation y = sin(pi *  (index - start) / (end - start) * amplitude)
+                    // https://www.desmos.com/calculator/ad3oqjmegn
                     line.y = (float)(Math.sin(Math.PI * (i - 500) / 130.0) * 6000);
                 }
 
